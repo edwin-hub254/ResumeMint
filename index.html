@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeMint | Modern ATS CV & Cover Letter Builder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Optional Admin Promo/Announcement Banner -->
+  <div id="topBanner" class="top-banner hidden">
+    <span id="topBannerText"></span>
+  </div>
+
+  <!-- Header -->
+  <header class="navbar no-print">
+    <div class="brand">
+      <div class="logo-badge">RM</div>
+      <div>
+        <h1>ResumeMint</h1>
+        <p class="tagline">Fresh, ATS-Ready CVs & Cover Letters</p>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <button id="tabBtnCV" class="tab-btn active" onclick="switchDocMode('cv')">CV Builder</button>
+      <button id="tabBtnCL" class="tab-btn" onclick="switchDocMode('cl')">Cover Letter</button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="workspace">
+    <!-- LEFT: Editor Form -->
+    <section class="editor-panel no-print">
+      
+      <!-- CV EDITOR -->
+      <div id="cvFormSection">
+        <div class="panel-header">
+          <h2>Build Your CV</h2>
+          <select id="templateSelect" onchange="updatePreview()">
+            <option value="executive">Minimalist Executive (ATS)</option>
+            <option value="modern">Modern Accent Header</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="fullName" placeholder="e.g. Jane Wanjiku Kamau" oninput="updatePreview()" />
+        </div>
+
+        <div class="form-group">
+          <label>Target Job Title *</label>
+          <input type="text" id="jobTitle" placeholder="e.g. Administrative & Operations Officer" oninput="updatePreview()" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone Number *</label>
+            <input type="tel" id="phone" placeholder="e.g. +254 712 345 678" oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" id="email" placeholder="e.g. jane.kamau@email.com" oninput="updatePreview()" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Location / City</label>
+          <input type="text" id="location" placeholder="e.g. Nairobi, Kenya" oninput="updatePreview()" />
+        </div>
+
+        <div class="form-group">
+          <label>Professional Summary</label>
+          <textarea id="summary" rows="3" placeholder="Results-driven professional with 3+ years of experience..." oninput="updatePreview()"></textarea>
+        </div>
+
+        <!-- Dynamic Experience -->
+        <div class="dynamic-section">
+          <div class="sec-head">
+            <h3>Work Experience</h3>
+            <button type="button" class="btn-small" onclick="addExperienceField()">+ Add Role</button>
+          </div>
+          <div id="experienceInputs"></div>
+        </div>
+
+        <!-- Dynamic Education -->
+        <div class="dynamic-section">
+          <div class="sec-head">
+            <h3>Education & Certifications</h3>
+            <button type="button" class="btn-small" onclick="addEducationField()">+ Add Education</button>
+          </div>
+          <div id="educationInputs"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Key Skills (comma separated)</label>
+          <textarea id="skills" rows="2" placeholder="Microsoft Excel, Customer Service, Inventory Management, Record Keeping" oninput="updatePreview()"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Referees (Optional)</label>
+          <textarea id="referees" rows="2" placeholder="Available upon request OR list Name, Title, Organization, Phone" oninput="updatePreview()"></textarea>
+        </div>
+      </div>
+      <!-- COVER LETTER EDITOR -->
+      <div id="clFormSection" class="hidden">
+        <div class="panel-header">
+          <h2>Draft Cover Letter</h2>
+          <button type="button" class="btn-small" onclick="autoFillCoverLetter()">Auto-Fill from CV</button>
+        </div>
+        <p class="hint-text">Uses your name and contact details from the CV tab automatically.</p>
+
+        <div class="form-group">
+          <label>Hiring Manager / Recipient</label>
+          <input type="text" id="clRecipient" placeholder="e.g. The Human Resource Manager" oninput="updatePreview()" />
+        </div>
+
+        <div class="form-group">
+          <label>Company / Organization Name *</label>
+          <input type="text" id="clCompany" placeholder="e.g. Safaricom PLC" oninput="updatePreview()" />
+        </div>
+
+        <div class="form-group">
+          <label>Position Applying For *</label>
+          <input type="text" id="clRole" placeholder="e.g. Customer Experience Executive" oninput="updatePreview()" />
+        </div>
+
+        <div class="form-group">
+          <label>Key Achievement or Why You Fit</label>
+          <textarea id="clBodyExtra" rows="4" placeholder="Highlight a key strength, experience, or motivation for joining this company..." oninput="updatePreview()"></textarea>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="download-bar">
+        <button id="btnPayCV" class="btn-primary" onclick="openPaymentModal('cv')">
+          Download CV (<span class="price-cv">150</span> KES)
+        </button>
+        <button id="btnPayCL" class="btn-secondary" onclick="openPaymentModal('cl')">
+          Download Cover Letter (<span class="price-cl">50</span> KES)
+        </button>
+        <button id="btnPayBundle" class="btn-bundle" onclick="openPaymentModal('bundle')">
+          Bundle: CV + Cover Letter (<span class="price-bundle">180</span> KES)
+        </button>
+      </div>
+    </section>
+    <!-- RIGHT: Live Preview -->
+    <section class="preview-panel">
+      <div class="preview-toolbar no-print">
+        <span id="lockBadge" class="badge-locked">Preview Mode (Watermarked)</span>
+        <button id="printNowBtn" class="btn-print hidden" onclick="window.print()">Print / Save PDF</button>
+      </div>
+
+      <div id="documentSheet" class="a4-sheet template-executive">
+        <!-- Watermark Overlay -->
+        <div id="watermarkOverlay" class="watermark-overlay">
+          <span>RESUMEMINT PREVIEW • PAY TO UNLOCK</span>
+          <span>RESUMEMINT PREVIEW • PAY TO UNLOCK</span>
+          <span>RESUMEMINT PREVIEW • PAY TO UNLOCK</span>
+        </div>
+
+        <!-- CV RENDER AREA -->
+        <div id="cvPreviewContent">
+          <div class="cv-header">
+            <h1 id="prevName">YOUR FULL NAME</h1>
+            <p id="prevTitle" class="cv-role">Target Job Title</p>
+            <p id="prevContact" class="cv-contact">Phone • Email • Location</p>
+          </div>
+
+          <div id="prevSummaryBox" class="cv-section">
+            <h4>PROFESSIONAL SUMMARY</h4>
+            <p id="prevSummary">Your professional summary will appear here as you type...</p>
+          </div>
+
+          <div id="prevExpBox" class="cv-section">
+            <h4>WORK EXPERIENCE</h4>
+            <div id="prevExperienceList"></div>
+          </div>
+
+          <div id="prevEduBox" class="cv-section">
+            <h4>EDUCATION & CERTIFICATIONS</h4>
+            <div id="prevEducationList"></div>
+          </div>
+
+          <div id="prevSkillsBox" class="cv-section">
+            <h4>CORE SKILLS</h4>
+            <p id="prevSkills">Skill 1 • Skill 2 • Skill 3</p>
+          </div>
+
+          <div id="prevRefBox" class="cv-section">
+            <h4>REFEREES</h4>
+            <p id="prevReferees">Available upon request.</p>
+          </div>
+        </div>
+
+        <!-- COVER LETTER RENDER AREA -->
+        <div id="clPreviewContent" class="hidden">
+          <div class="cl-header">
+            <h2 id="clPrevName">YOUR FULL NAME</h2>
+            <p id="clPrevContact">Phone | Email | Location</p>
+          </div>
+          <hr />
+          <p id="clPrevDate" class="cl-date"></p>
+          <p id="clPrevRecipient">The Human Resource Manager,<br />Company Name</p>
+          <p class="cl-subject"><strong>RE: APPLICATION FOR THE POSITION OF <span id="clPrevRole">ROLE</span></strong></p>
+          <p>Dear Hiring Manager,</p>
+          <p id="clPrevIntro">I am writing to express my strong interest in the position at your organization. With my background and hands-on skills, I am confident in my ability to add immediate value to your team.</p>
+          <p id="clPrevCustom">Throughout my career, I have demonstrated strong organizational skills, reliability, and a commitment to excellence.</p>
+          <p>Thank you for considering my application. I welcome the opportunity to discuss how my skills and experience align with your goals.</p>
+          <p>Sincerely,<br /><br /><strong id="clPrevSign">Your Full Name</strong></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer with Secret Admin Trigger -->
+  <footer class="footer no-print">
+    <p>&copy; 2026 ResumeMint. Built for modern job seekers.</p>
+    <div class="footer-links">
+      <a id="whatsappSupportLink" href="https://wa.me/254703592418?text=Hello%20ResumeMint%20Admin,%20I%20need%20help%20with%20my%20CV" target="_blank">WhatsApp Help</a>
+      <button class="admin-trigger" onclick="openAdminModal()" title="Admin Panel">&#128274;</button>
+    </div>
+  </footer>
+  <!-- M-PESA PAYMENT MODAL -->
+  <div id="paymentModal" class="modal hidden no-print">
+    <div class="modal-card">
+      <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
+      <h3>Unlock Clean PDF Download</h3>
+      <p id="payItemLabel" class="pay-item-tag">Selected: Complete CV</p>
+      
+      <div class="mpesa-box">
+        <p>1. Go to <strong>M-Pesa</strong> &rarr; <strong>Send Money</strong></p>
+        <p>2. Enter Phone Number: <strong id="displayMpesaNumber" class="highlight-num">0703592418</strong></p>
+        <p>3. Enter Exact Amount: <strong class="highlight-amt">KES <span id="displayPayAmount">150</span></strong></p>
+      </div>
+
+      <div class="form-group">
+        <label>Your M-Pesa Phone Number</label>
+        <input type="tel" id="payerPhone" placeholder="e.g. 0712345678" />
+      </div>
+
+      <div class="form-group">
+        <label>M-Pesa Transaction Code (or Promo Code)</label>
+        <input type="text" id="mpesaCodeInput" placeholder="e.g. SBL48K9P2M" maxlength="12" style="text-transform: uppercase;" />
+      </div>
+
+      <p id="payErrorMsg" class="error-text"></p>
+      <button id="verifyPayBtn" class="btn-primary full-width" onclick="verifyMpesaPayment()">Verify & Unlock Download</button>
+    </div>
+  </div>
+
+  <!-- ADMIN MODAL (Login + Dashboard) -->
+  <div id="adminModal" class="modal hidden no-print">
+    <div class="modal-card modal-wide">
+      <button class="close-btn" onclick="closeModal('adminModal')">&times;</button>
+      
+      <!-- Admin Login View -->
+      <div id="adminLoginView">
+        <h3>Admin Access</h3>
+        <div class="form-group">
+          <label>Admin Email</label>
+          <input type="email" id="adminEmail" placeholder="admin@resumemint.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="adminPassword" placeholder="••••••••" />
+        </div>
+        <p id="adminAuthError" class="error-text"></p>
+        <button class="btn-primary full-width" onclick="adminLogin()">Sign In</button>
+      </div>
+
+      <!-- Admin Dashboard View -->
+      <div id="adminDashboardView" class="hidden">
+        <div class="admin-head">
+          <h3>ResumeMint Admin Control</h3>
+          <button class="btn-small" onclick="adminLogout()">Logout</button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span>Total Revenue</span>
+            <strong id="statRevenue">0 KES</strong>
+          </div>
+          <div class="stat-box">
+            <span>Downloads</span>
+            <strong id="statCount">0</strong>
+          </div>
+          <div class="stat-box">
+            <span>Pending Check</span>
+            <strong id="statPending">0</strong>
+          </div>
+        </div>
+
+        <!-- Pricing & Settings Control -->
+        <div class="admin-section">
+          <h4>Pricing, M-Pesa & Promo Settings</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label>CV Price (KES)</label>
+              <input type="number" id="cfgCvPrice" value="150" />
+            </div>
+            <div class="form-group">
+              <label>Cover Letter (KES)</label>
+              <input type="number" id="cfgClPrice" value="50" />
+            </div>
+            <div class="form-group">
+              <label>Bundle Price (KES)</label>
+              <input type="number" id="cfgBundlePrice" value="180" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>M-Pesa Number</label>
+              <input type="text" id="cfgMpesaNum" value="0703592418" />
+            </div>
+            <div class="form-group">
+              <label>VIP Free Promo Code</label>
+              <input type="text" id="cfgPromoCode" placeholder="e.g. MINTFREE" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Top Announcement Banner (leave empty to hide)</label>
+            <input type="text" id="cfgBannerText" placeholder="e.g. Special Offer: Get CV + Cover Letter for 180 KES!" />
+          </div>
+
+          <div class="checkbox-row">
+            <label>
+              <input type="checkbox" id="cfgFreeMode" /> Enable Free Download Mode (Promo)
+            </label>
+          </div>
+
+          <button class="btn-primary" onclick="saveAdminSettings()">Save All Settings</button>
+          <span id="cfgSaveStatus" class="success-text"></span>
+        </div>
+
+        <!-- Transaction Logs -->
+        <div class="admin-section">
+          <h4>Recent M-Pesa Transactions</h4>
+          <div class="table-wrap">
+            <table class="tx-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Phone</th>
+                  <th>Item / Amt</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="txTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script src="firebase-config.js"></script>
+  <script src="main.js"></script>
+</body>
